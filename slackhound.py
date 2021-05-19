@@ -196,6 +196,27 @@ def search(keyword):
     except requests.exceptions.RequestException as exception:
         print(str(exception))
 
+
+def getUserAll(user_id):
+    api_url_base = 'https://slack.com/api/users.profile.get?pretty=1&limit=1000&user='
+    try:
+        tokenCheck = requests.post("https://slack.com/api/auth.test", headers=api_headers).json()
+        if str(tokenCheck['ok']) == 'True':
+            response = requests.get(api_url_base + user_id, headers=api_headers).json()
+            #print(response)
+            nextt = response.next_cursor
+            print(nextt)
+            for key, value in response.items():
+                print(key, ":", value)
+        else:
+            print("[ERROR]: Token not valid. Slack error: " + str(tokenCheck['error']))
+            exit()
+        for i in range(0,15):
+            response = requests.get(api_url_base + user_id + "&next_cursor=" + nextt, headers=api_headers).json()
+
+    except requests.exceptions.RequestException as exception:
+        print(str(exception))
+
 def readlines(selArgs):
     if options.dumpAllUsers:
         dumpAllUsers()
