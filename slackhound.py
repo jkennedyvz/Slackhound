@@ -9,7 +9,7 @@ from optparse import OptionParser
 import csv
 import pandas as pd
 
-api_url_base = 'https://slack.com/api/users.list'
+api_url_base = 'https://slack.com/api/users.list?'
 api_token = ""
 bearer_token = ""
 
@@ -75,11 +75,12 @@ def dumpAllUsers():
     try:
         tokenCheck = requests.post("https://slack.com/api/auth.test", headers=api_headers).json()
         if str(tokenCheck['ok']) == 'True':
-            jsonResponse = requests.get(api_url_base, headers=api_headers)
+            jsonResponse = requests.get(api_url_base + '&limit=1000', headers=api_headers)
             data = json.loads(jsonResponse.text)
             slack_data = data['members']
             data_file = open('slack_objects_dump.csv', 'w', newline='')
             csv_writer = csv.writer(data_file)
+            tok = data['response_metadata']['next_cursor']
             count = 0
             for slack_details in slack_data:
                 if count == 0:
@@ -87,6 +88,15 @@ def dumpAllUsers():
                     csv_writer.writerow(header)
                     count += 1
                 csv_writer.writerow(slack_details.values())
+            while tok != '':    
+                print(tok)
+                jsonResponse = requests.get(api_url_base + '&cursor={}'.format(tok) + '&limit=1000' , headers=api_headers)
+                data = json.loads(jsonResponse.text)
+                tok = data['response_metadata']['next_cursor']
+                slack_data = data['members']
+                for slack_details in slack_data:
+                    csv_writer.writerow(header)
+                    csv_writer.writerow(slack_details.values())
             data_file.close()
         else:
             print("[ERROR]: Token not valid. Slack error: " + str(tokenCheck['error']))
@@ -196,26 +206,6 @@ def search(keyword):
     except requests.exceptions.RequestException as exception:
         print(str(exception))
 
-
-def getUserAll(user_id):
-    api_url_base = 'https://slack.com/api/users.profile.get?pretty=1&limit=1000&user='
-    try:
-        tokenCheck = requests.post("https://slack.com/api/auth.test", headers=api_headers).json()
-        if str(tokenCheck['ok']) == 'True':
-            response = requests.get(api_url_base + user_id, headers=api_headers).json()
-            #print(response)
-            nextt = response.next_cursor
-            print(nextt)
-            for key, value in response.items():
-                print(key, ":", value)
-        else:
-            print("[ERROR]: Token not valid. Slack error: " + str(tokenCheck['error']))
-            exit()
-        for i in range(0,15):
-            response = requests.get(api_url_base + user_id + "&next_cursor=" + nextt, headers=api_headers).json()
-
-    except requests.exceptions.RequestException as exception:
-        print(str(exception))
 
 def readlines(selArgs):
     if options.dumpAllUsers:
