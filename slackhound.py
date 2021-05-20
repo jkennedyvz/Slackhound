@@ -198,8 +198,14 @@ def search(keyword):
             response = requests.get(api_url_base + keyword, headers=api_headers)
             dic = response.json()
             # convert dictionary to dataframe
-            data = pd.DataFrame.from_dict(dic, orient='index')
-            data.to_csv('slack_objects_search.csv')
+            #data = pd.DataFrame.from_dict(dic, orient='index')
+            #data.to_csv('slack_objects_search.csv')
+            header = dic.keys()
+            data_file = open('slack_objects_dump.csv', 'w', newline='')
+            csv_writer = csv.DictWriter(data_file, fieldnames=header)
+            for d in dic:
+                csv_writer.writerow(header)
+                csv_writer.writerow(slack_details.values())
         else:
             print("[ERROR]: Token not valid. Slack error: " + str(tokenCheck['error']))
             exit()
