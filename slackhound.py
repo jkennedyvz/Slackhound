@@ -9,7 +9,7 @@ from optparse import OptionParser
 import csv
 import pandas as pd
 
-api_url_base = 'https://slack.com/api/users.list?'
+api_url_base = 'https://slack.com/api/users.list'
 api_token = ""
 bearer_token = ""
 
@@ -90,7 +90,7 @@ def dumpAllUsers():
                 csv_writer.writerow(slack_details.values())
             while tok != '':    
                 print(tok)
-                jsonResponse = requests.get(api_url_base + '&cursor={}'.format(tok) + '&limit=1000' , headers=api_headers)
+                jsonResponse = requests.get(api_url_base + '?&cursor=' + tok + '&limit=1000' , headers=api_headers)
                 data = json.loads(jsonResponse.text)
                 tok = data['response_metadata']['next_cursor']
                 slack_data = data['members']
